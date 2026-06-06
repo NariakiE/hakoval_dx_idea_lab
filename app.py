@@ -512,6 +512,9 @@ def add_idea(
     image_path: str,
     external_url: str,
 ) -> None:
+    if idea_title_exists(title):
+        raise ValueError("同じ名前のアイデアが既に登録されています。")
+
     if use_supabase():
         sb().table("ideas").insert(
             {
@@ -553,6 +556,31 @@ def add_idea(
         )
 
 
+def idea_title_exists(title: str, exclude_id: str | None = None) -> bool:
+    normalized_title = title.strip()
+    if not normalized_title:
+        return False
+
+    if use_supabase():
+        query = sb().table("ideas").select("id").eq("title", normalized_title)
+        if exclude_id:
+            query = query.neq("id", exclude_id)
+        return bool(query.limit(1).execute().data)
+
+    with connect() as con:
+        if exclude_id:
+            row = con.execute(
+                "SELECT 1 FROM ideas WHERE title = ? AND id != ? LIMIT 1",
+                (normalized_title, exclude_id),
+            ).fetchone()
+        else:
+            row = con.execute(
+                "SELECT 1 FROM ideas WHERE title = ? LIMIT 1",
+                (normalized_title,),
+            ).fetchone()
+    return row is not None
+
+
 def update_idea(
     idea_id: str,
     title: str,
@@ -564,6 +592,9 @@ def update_idea(
     image_path: str,
     external_url: str,
 ) -> None:
+    if idea_title_exists(title, exclude_id=idea_id):
+        raise ValueError("同じ名前のアイデアが既に登録されています。")
+
     if use_supabase():
         sb().table("ideas").update(
             {
@@ -1047,19 +1078,22 @@ def render_admin(ideas: pd.DataFrame, events: pd.DataFrame, comments: pd.DataFra
         if update_submitted:
             if edited_title and edited_summary and edited_user_scene and edited_value:
                 new_image_path = save_uploaded_image(edited_image_file) or current_image_path
-                update_idea(
-                    edit_row["id"],
-                    edited_title,
-                    edited_category,
-                    edited_summary,
-                    edited_user_scene,
-                    edited_value,
-                    edited_detail,
-                    new_image_path,
-                    edited_external_url,
-                )
-                st.success("アイデアを更新しました")
-                st.rerun()
+                try:
+                    update_idea(
+                        edit_row["id"],
+                        edited_title,
+                        edited_category,
+                        edited_summary,
+                        edited_user_scene,
+                        edited_value,
+                        edited_detail,
+                        new_image_path,
+                        edited_external_url,
+                    )
+                    st.success("アイデアを更新しました")
+                    st.rerun()
+                except ValueError as exc:
+                    st.warning(str(exc))
             else:
                 st.warning("必須項目を入力してください")
 
@@ -1139,9 +1173,12 @@ def render_admin(ideas: pd.DataFrame, events: pd.DataFrame, comments: pd.DataFra
                     f"想定利用シーン:\n{user_scene}\n\n"
                     f"期待できる効果:\n{value}"
                 )
-                add_idea(title, category, summary_text, user_scene, value, detail_text, image_path, external_url)
-                st.success("アイデアを追加しました")
-                st.rerun()
+                try:
+                    add_idea(title, category, summary_text, user_scene, value, detail_text, image_path, external_url)
+                    st.success("アイデアを追加しました")
+                    st.rerun()
+                except ValueError as exc:
+                    st.warning(str(exc))
             else:
                 st.warning("すべての項目を入力してください")
 
