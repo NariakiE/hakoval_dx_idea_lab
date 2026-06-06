@@ -25,6 +25,15 @@ DB_PATH = APP_DIR / "hakoval_dx.db"
 UPLOAD_DIR = APP_DIR / "uploads"
 SUPABASE_IMAGE_BUCKET = os.environ.get("SUPABASE_IMAGE_BUCKET", "idea-images")
 
+DEFAULT_IMAGE_BY_TITLE = {
+    "業者側の紙の日報をデジタル化（常用工事記入可能）": "generated_assets/digital-daily-report.png",
+    "現場マニュアルAI検索": "generated_assets/manual-ai-search.png",
+    "定例会議メモから議事録・メール自動作成": "generated_assets/meeting-minutes-ai.png",
+    "音声発注・手配アシスタント": "generated_assets/voice-order-assistant.png",
+    "新規入場者教育AIチェック": "generated_assets/safety-orientation-ai.png",
+    "現場横断Power BIダッシュボード": "generated_assets/cross-site-dashboard.png",
+}
+
 CATEGORIES = {
     "現場AI": "現場で聞く・探す・確認する負担を減らす",
     "書類/議事録": "会議後や提出前の作成作業を軽くする",
@@ -751,6 +760,8 @@ def render_comment_form(idea_id: str, key_prefix: str) -> None:
 
 def render_image_or_placeholder(row: pd.Series) -> None:
     image_path = str(row.get("image_path", "") or "")
+    if not image_path:
+        image_path = DEFAULT_IMAGE_BY_TITLE.get(str(row.get("title", "")), "")
     if image_path and (is_url(image_path) or Path(image_path).exists()):
         st.image(image_path, use_container_width=True)
         return
