@@ -29,7 +29,8 @@ DEFAULT_IMAGE_BY_TITLE = {
     "業者側の紙の日報をデジタル化（常用工事記入可能）": "generated_assets/digital-daily-report.png",
     "現場マニュアルAI検索": "generated_assets/manual-ai-search.png",
     "定例会議メモから議事録・メール自動作成": "generated_assets/meeting-minutes-ai.png",
-    "音声発注・手配アシスタント": "generated_assets/voice-order-assistant.png",
+    "音声発注・手配アシスタント": "generated_assets/material-order-app-pr.png",
+    "資材注文アプリ": "generated_assets/material-order-app-pr.png",
     "新規入場者教育AIチェック": "generated_assets/safety-orientation-ai.png",
     "現場横断Power BIダッシュボード": "generated_assets/cross-site-dashboard.png",
 }
