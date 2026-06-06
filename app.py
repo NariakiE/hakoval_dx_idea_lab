@@ -42,6 +42,24 @@ CATEGORIES = {
     "ダッシュボード": "工程・原価・安全・出来高を見える化する",
 }
 
+DAILY_REPORT_IDEA = {
+    "title": "業者側の紙の日報をデジタル化（常用工事記入可能）",
+    "category": "書類/議事録",
+    "summary": "日報ペーパーレスになったが、常用管理を紙で行っている現状を打開する電子日報サービス",
+    "user_scene": "職長の方が空いた時間や、帰り際や帰りながら手持ちのスマホで記入",
+    "value": "現場の常駐時間や事務員さんの業務時間削減、月末請求時期の事務作業低減、日報用紙の紛失の心配無用 等",
+    "detail": (
+        "元請の日報がペーパーレス化したことにより常用管理（作業内容や人工管理等）が難しくなり、"
+        "下請け会社書式の日報を職長さんが作業員の方がみんな帰った後にいつも休憩所で記入している姿を"
+        "何度も拝見したことから、職長になると仕事が増えるからやりたくない。という作業員の方もいらっしゃり、"
+        "下請け会社さんの事務員の方も請求時期に紙の日報をコピーしたり貼り付けしたりして、大変な現状がある。\n"
+        "それを解決するのがこの現場日報である。\n"
+        "これを利用すれば職長さんは手持ちのスマホから手軽に記入でき、帰りながらでも記入できて"
+        "メールで元請の承認を受ければみんなの時間にゆとりができると思い開発。"
+    ),
+    "status": "検証前",
+}
+
 SEED_IDEAS = [
     {
         "title": "現場マニュアルAI検索",
@@ -79,6 +97,8 @@ SEED_IDEAS = [
         "value": "報告資料作成を減らし、遅延や是正遅れを早期発見する。",
     },
 ]
+
+DEFAULT_IDEAS = [DAILY_REPORT_IDEA, *SEED_IDEAS]
 
 
 def get_config_value(name: str, default: str = "") -> str:
@@ -195,8 +215,9 @@ def init_db() -> None:
             )
             """
         )
-        existing = con.execute("SELECT COUNT(*) FROM ideas").fetchone()[0]
-        if existing == 0:
+        existing_titles = {row[0] for row in con.execute("SELECT title FROM ideas").fetchall()}
+        missing_ideas = [idea for idea in DEFAULT_IDEAS if idea["title"] not in existing_titles]
+        if missing_ideas:
             now = datetime.now().isoformat(timespec="seconds")
             con.executemany(
                 """
@@ -212,24 +233,26 @@ def init_db() -> None:
                         idea["summary"],
                         idea["user_scene"],
                         idea["value"],
-                        build_default_detail(idea),
-                        "LP反応確認",
+                        idea.get("detail") or build_default_detail(idea),
+                        idea.get("status", "LP反応確認"),
                         now,
                     )
-                    for idea in SEED_IDEAS
+                    for idea in missing_ideas
                 ],
             )
 
 
 def init_supabase_seed() -> None:
     try:
-        existing = sb().table("ideas").select("id", count="exact").limit(1).execute()
+        existing = sb().table("ideas").select("title").execute()
     except Exception as exc:
         st.error("Supabaseに接続できません。supabase_schema.sqlを実行し、Secretsを確認してください。")
         st.exception(exc)
         st.stop()
 
-    if existing.count:
+    existing_titles = {row["title"] for row in existing.data}
+    missing_ideas = [idea for idea in DEFAULT_IDEAS if idea["title"] not in existing_titles]
+    if not missing_ideas:
         return
 
     now = now_iso()
@@ -241,13 +264,13 @@ def init_supabase_seed() -> None:
             "summary": idea["summary"],
             "user_scene": idea["user_scene"],
             "value": idea["value"],
-            "detail": build_default_detail(idea),
+            "detail": idea.get("detail") or build_default_detail(idea),
             "image_path": "",
             "external_url": "",
-            "status": "LP反応確認",
+            "status": idea.get("status", "LP反応確認"),
             "created_at": now,
         }
-        for idea in SEED_IDEAS
+        for idea in missing_ideas
     ]
     sb().table("ideas").insert(rows).execute()
 
