@@ -32,13 +32,18 @@ DEFAULT_IMAGE_BY_TITLE = {
     "音声発注・手配アシスタント": "generated_assets/voice-order-assistant.png",
     "資材注文アプリ": "generated_assets/material-order-app-pr.png",
     "クレアポ（クレーン手配管理）": "generated_assets/cleapo-crane-order-pr.png",
+    "カンベル（現場監督ルーティン管理）": "generated_assets/kanbel-routine-task-pr.png",
     "新規入場者教育AIチェック": "generated_assets/safety-orientation-ai.png",
     "現場横断Power BIダッシュボード": "generated_assets/cross-site-dashboard.png",
 }
 
-FEATURED_IDEA_TITLES = ["クレアポ（クレーン手配管理）"]
+FEATURED_IDEA_TITLES = [
+    "カンベル（現場監督ルーティン管理）",
+    "クレアポ（クレーン手配管理）",
+]
 
 CATEGORIES = {
+    "現場管理": "日々のタスク、指示、進捗を見える化する",
     "現場AI": "現場で聞く・探す・確認する負担を減らす",
     "書類/議事録": "会議後や提出前の作成作業を軽くする",
     "発注/手配": "電話・メール・記憶に頼る手配を整える",
@@ -88,6 +93,31 @@ CLEAPO_CRANE_ORDER_IDEA = {
     "status": "検証前",
 }
 
+KANBEL_ROUTINE_TASK_IDEA = {
+    "title": "カンベル（現場監督ルーティン管理）",
+    "category": "現場管理",
+    "summary": "現場監督が忙しくて忘れがちな日々のタスクをアプリが支援し、上職者が進捗確認や追加指示を出せる管理アプリ。",
+    "user_scene": "現場監督が朝礼準備、受け入れ教育、昼礼準備、翌日の資機材手配、作業進捗確認、終了確認などをスマホで確認・回答する。",
+    "value": "個人の記憶に頼るルーティンを見える化し、抜け漏れを減らす。上職者は複数の部下の完了率や未回答タスクを見て、早めに声かけや追加指示ができる。",
+    "detail": (
+        "カンベルは、現場監督の毎日のルーティンワークをタスク化し、忙しい現場でも確認漏れを減らすためのアプリである。\n"
+        "現場監督は、今日やるべき確認事項をスマホやPCで見ながら、完了・未完了を記録できる。\n"
+        "上職者は部下ごとの完了率や未回答タスクを確認し、必要に応じて追加の指示やフォローを行える。\n\n"
+        "主な機能:\n"
+        "- 今日のタスク一覧と完了率の表示\n"
+        "- 朝礼準備、新規受け入れ教育、昼礼準備、資機材手配、作業進捗確認、現場終了確認などの日次ルーティン管理\n"
+        "- 完了ログによる実施状況の振り返り\n"
+        "- 上職者による複数メンバーの進捗確認\n"
+        "- 追加指示やフォローが必要なタスクの把握\n\n"
+        "MVPで確認したいこと:\n"
+        "- 現場監督が毎日自然に回答できるタスク数と入力方法は何か\n"
+        "- 上職者が見たい単位は個人別、現場別、日別のどれか\n"
+        "- 未完了時に通知、コメント、追加指示をどこまで必要とするか\n"
+        "- 既存の朝礼、昼礼、終業確認の流れに無理なく組み込めるか"
+    ),
+    "status": "検証前",
+}
+
 SEED_IDEAS = [
     {
         "title": "現場マニュアルAI検索",
@@ -126,7 +156,7 @@ SEED_IDEAS = [
     },
 ]
 
-DEFAULT_IDEAS = [DAILY_REPORT_IDEA, CLEAPO_CRANE_ORDER_IDEA, *SEED_IDEAS]
+DEFAULT_IDEAS = [DAILY_REPORT_IDEA, CLEAPO_CRANE_ORDER_IDEA, KANBEL_ROUTINE_TASK_IDEA, *SEED_IDEAS]
 
 
 def get_config_value(name: str, default: str = "") -> str:
