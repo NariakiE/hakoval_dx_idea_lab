@@ -961,6 +961,7 @@ def render_public_site(ideas: pd.DataFrame) -> None:
             else len(FEATURED_IDEA_TITLES)
         )
         visible = visible.sort_values("_featured_rank", kind="stable").drop(columns=["_featured_rank"])
+        visible = visible.drop_duplicates(subset=["title"], keep="first")
 
     cols = st.columns(2)
     for index, row in visible.reset_index(drop=True).iterrows():
