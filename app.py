@@ -31,9 +31,12 @@ DEFAULT_IMAGE_BY_TITLE = {
     "定例会議メモから議事録・メール自動作成": "generated_assets/meeting-minutes-ai.png",
     "音声発注・手配アシスタント": "generated_assets/voice-order-assistant.png",
     "資材注文アプリ": "generated_assets/material-order-app-pr.png",
+    "クレアポ（クレーン手配管理）": "generated_assets/cleapo-crane-order-pr.png",
     "新規入場者教育AIチェック": "generated_assets/safety-orientation-ai.png",
     "現場横断Power BIダッシュボード": "generated_assets/cross-site-dashboard.png",
 }
+
+FEATURED_IDEA_TITLES = ["クレアポ（クレーン手配管理）"]
 
 CATEGORIES = {
     "現場AI": "現場で聞く・探す・確認する負担を減らす",
@@ -57,6 +60,30 @@ DAILY_REPORT_IDEA = {
         "それを解決するのがこの現場日報である。\n"
         "これを利用すれば職長さんは手持ちのスマホから手軽に記入でき、帰りながらでも記入できて"
         "メールで元請の承認を受ければみんなの時間にゆとりができると思い開発。"
+    ),
+    "status": "検証前",
+}
+
+CLEAPO_CRANE_ORDER_IDEA = {
+    "title": "クレアポ（クレーン手配管理）",
+    "category": "発注/手配",
+    "summary": "元請けの現場監督がクレーンを注文し、クレーン屋さんが注文内容を確認して手配できる管理アプリ。",
+    "user_scene": "現場監督がスマホやPCから日時、現場名、クレーン車種、作業時間帯を入力し、クレーン会社が一覧やカレンダーで注文を確認する。",
+    "value": "電話・FAX・口頭連絡に頼るクレーン手配を見える化し、注文漏れ、日程認識違い、車種の手配ミス、月次確認の手戻りを減らす。",
+    "detail": (
+        "クレアポは、元請けとクレーン会社の間にあるクレーン手配のやり取りを整理するアプリである。\n"
+        "元請けの現場監督は、現場ごとの予定に合わせて13t、25t、50t、70t、80t、100tなどのクレーンを注文できる。\n"
+        "クレーン会社側は注文一覧や稼働カレンダーで注文内容を確認し、機材・担当者・日程を見ながら手配を進められる。\n\n"
+        "主な機能:\n"
+        "- 元請け現場監督によるクレーン新規注文\n"
+        "- クレーン会社による注文確認と手配状況管理\n"
+        "- 稼働カレンダーでの日程、車種、現場別の確認\n"
+        "- 月次確認や請求資料作成に向けた注文履歴の整理\n\n"
+        "MVPで確認したいこと:\n"
+        "- 現場監督が電話の代わりに入力したい項目は何か\n"
+        "- クレーン会社が手配判断に必要な情報は何か\n"
+        "- 注文後の変更、キャンセル、確認済みステータスをどこまで必要とするか\n"
+        "- 月次請求や現場別集計にそのまま使える粒度になっているか"
     ),
     "status": "検証前",
 }
@@ -99,7 +126,7 @@ SEED_IDEAS = [
     },
 ]
 
-DEFAULT_IDEAS = [DAILY_REPORT_IDEA, *SEED_IDEAS]
+DEFAULT_IDEAS = [DAILY_REPORT_IDEA, CLEAPO_CRANE_ORDER_IDEA, *SEED_IDEAS]
 
 
 def get_config_value(name: str, default: str = "") -> str:
@@ -896,6 +923,14 @@ def render_public_site(ideas: pd.DataFrame) -> None:
         label_visibility="collapsed",
     )
     visible = ideas if selected_category == "すべて" else ideas[ideas["category"] == selected_category]
+    if not visible.empty:
+        visible = visible.copy()
+        visible["_featured_rank"] = visible["title"].apply(
+            lambda title: FEATURED_IDEA_TITLES.index(title)
+            if title in FEATURED_IDEA_TITLES
+            else len(FEATURED_IDEA_TITLES)
+        )
+        visible = visible.sort_values("_featured_rank", kind="stable").drop(columns=["_featured_rank"])
 
     cols = st.columns(2)
     for index, row in visible.reset_index(drop=True).iterrows():
