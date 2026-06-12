@@ -30,6 +30,7 @@ DEFAULT_IMAGE_BY_TITLE = {
     "現場マニュアルAI検索": "generated_assets/manual-ai-search.png",
     "定例会議メモから議事録・メール自動作成": "generated_assets/meeting-minutes-ai.png",
     "音声発注・手配アシスタント": "generated_assets/voice-order-assistant.png",
+    "モノクル（資材発注管理）": "generated_assets/material-order-app-pr.png",
     "資材注文アプリ": "generated_assets/material-order-app-pr.png",
     "クレアポ（クレーン手配管理）": "generated_assets/cleapo-crane-order-pr.png",
     "カンベル（現場監督ルーティン管理）": "generated_assets/kanbel-routine-task-pr.png",
@@ -38,6 +39,7 @@ DEFAULT_IMAGE_BY_TITLE = {
 }
 
 FEATURED_IDEA_TITLES = [
+    "モノクル（資材発注管理）",
     "カンベル（現場監督ルーティン管理）",
     "クレアポ（クレーン手配管理）",
 ]
@@ -118,6 +120,35 @@ KANBEL_ROUTINE_TASK_IDEA = {
     "status": "検証前",
 }
 
+MONOCLE_MATERIAL_ORDER_IDEA = {
+    "title": "モノクル（資材発注管理）",
+    "category": "発注/手配",
+    "summary": "現場担当者と材料屋さんが、資材の写真、単価、数量、注文状況を同じ画面で確認できる資材発注アプリ。",
+    "user_scene": "現場担当者が必要な資材を商品一覧から選び、価格と写真を確認してカート発注する。材料屋さんは注文管理画面で受付、手配中、配達完了などのステータスを更新する。",
+    "value": "発注忘れ、口頭や画像確認不足による認識違い、価格未確認による想定外の高額発注を減らす。現場側は注文完了、配達中、配達完了をリアルタイムに確認でき、材料屋さん側も注文忘れや確認電話を減らせる。",
+    "detail": (
+        "モノクルは、建設現場の資材発注を現場側と材料屋さん側の双方で見える化するアプリである。\n"
+        "これまで、資材の発注忘れ、口頭だけのやり取りや写真未確認による認識違い、単価を把握しないまま発注して"
+        "後になって「こんなに高いとは知らなかった」となる不具合が散見されていた。\n\n"
+        "このアプリでは、現場担当者が商品写真、品番、単価、数量を確認しながらカートに入れて発注できる。\n"
+        "注文後は、注文受付、手配中、出荷済、配達完了などのステータスで状況を確認できるため、"
+        "いちいち電話で「まだですか？」と催促したり確認したりする手間を減らせる。\n"
+        "材料屋さん側も注文一覧とステータス更新画面で対応状況を管理でき、注文忘れや対応漏れを減らせる。\n\n"
+        "主な機能:\n"
+        "- 商品写真、品番、カテゴリ、税込単価を見ながら資材を選択\n"
+        "- カートで数量、合計金額、備考、配送希望を確認して発注\n"
+        "- 現場側の注文履歴と配送ステータスバー\n"
+        "- 材料屋さん側の注文管理、ステータス更新、注文件数サマリー\n"
+        "- 商品管理と価格更新による単価の見える化\n\n"
+        "MVPで確認したいこと:\n"
+        "- 現場で最初に登録すべき主要資材カテゴリは何か\n"
+        "- 写真、品番、単価、納品場所のどれが認識違い防止に最も効くか\n"
+        "- 材料屋さん側のステータス更新負荷は許容できるか\n"
+        "- 電話確認や催促がどの程度減るか"
+    ),
+    "status": "検証前",
+}
+
 SEED_IDEAS = [
     {
         "title": "現場マニュアルAI検索",
@@ -156,7 +187,13 @@ SEED_IDEAS = [
     },
 ]
 
-DEFAULT_IDEAS = [DAILY_REPORT_IDEA, CLEAPO_CRANE_ORDER_IDEA, KANBEL_ROUTINE_TASK_IDEA, *SEED_IDEAS]
+DEFAULT_IDEAS = [
+    DAILY_REPORT_IDEA,
+    CLEAPO_CRANE_ORDER_IDEA,
+    KANBEL_ROUTINE_TASK_IDEA,
+    MONOCLE_MATERIAL_ORDER_IDEA,
+    *SEED_IDEAS,
+]
 
 
 def get_config_value(name: str, default: str = "") -> str:
