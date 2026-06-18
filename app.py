@@ -966,7 +966,7 @@ def render_image_or_placeholder(row: pd.Series) -> None:
         image_path = DEFAULT_IMAGE_BY_TITLE.get(str(row.get("title", "")), "")
     resolved_image_source = resolve_image_source(image_path)
     if resolved_image_source:
-        st.image(resolved_image_source, use_container_width=True)
+        st.image(resolved_image_source, width="stretch")
         return
     st.markdown(
         f"""
@@ -1439,29 +1439,45 @@ def main() -> None:
         }
         div[data-testid="stImage"] img {
             border-radius: 8px;
+            height: auto !important;
+            max-width: 100% !important;
+            object-fit: cover;
+            width: 100% !important;
+        }
+        div[data-testid="stElementContainer"]:has(div[data-testid="stImage"]),
+        div[data-testid="stFullScreenFrame"]:has(div[data-testid="stImage"]),
+        div[data-testid="stImage"],
+        div[data-testid="stImageContainer"] {
+            max-width: 100% !important;
+            width: 100% !important;
         }
         div[data-testid="stButton"] button,
         div[data-testid="stFormSubmitButton"] button,
         div[data-testid="stDownloadButton"] button,
         div[data-testid="stLinkButton"] a {
-            background: #05070a !important;
-            border: 1px solid #05070a !important;
+            background: #ffffff !important;
+            border: 1px solid #cfd6e0 !important;
             border-radius: 8px !important;
-            color: #ffffff !important;
+            color: #0b0f14 !important;
             font-weight: 800 !important;
+            min-height: 42px !important;
         }
         div[data-testid="stButton"] button:hover,
         div[data-testid="stFormSubmitButton"] button:hover,
         div[data-testid="stDownloadButton"] button:hover,
         div[data-testid="stLinkButton"] a:hover {
-            background: #1d1d1f !important;
-            border-color: #1d1d1f !important;
-            color: #ffffff !important;
+            background: #f4f7fb !important;
+            border-color: #8f9aaa !important;
+            color: #0b0f14 !important;
         }
         div[data-testid="stButton"] button p,
+        div[data-testid="stButton"] button span,
         div[data-testid="stFormSubmitButton"] button p,
+        div[data-testid="stFormSubmitButton"] button span,
         div[data-testid="stDownloadButton"] button p,
-        div[data-testid="stLinkButton"] a p {
+        div[data-testid="stDownloadButton"] button span,
+        div[data-testid="stLinkButton"] a p,
+        div[data-testid="stLinkButton"] a span {
             color: inherit !important;
             font-weight: inherit !important;
         }
@@ -1495,6 +1511,16 @@ def main() -> None:
             border-color: #05070a !important;
             color: #ffffff !important;
             font-weight: 800 !important;
+        }
+        div[data-testid="stSegmentedControl"] button[aria-checked="true"] *,
+        div[data-testid="stSegmentedControl"] button[aria-pressed="true"] *,
+        div[data-testid="stSegmentedControl"] label:has(input:checked) *,
+        div[data-testid="stSegmentedControl"] div[aria-checked="true"] *,
+        .stApp [role="radiogroup"] button[aria-checked="true"] *,
+        .stApp [role="radiogroup"] button[aria-pressed="true"] *,
+        .stApp [data-baseweb="button-group"] button[aria-checked="true"] *,
+        .stApp [data-baseweb="button-group"] button[aria-pressed="true"] * {
+            color: #ffffff !important;
         }
         .stApp [role="radiogroup"],
         .stApp [data-baseweb="button-group"] {
@@ -1581,12 +1607,12 @@ def main() -> None:
 
     page = st.sidebar.radio(
         "表示",
-        ["顧客向けサイト", "運営ダッシュボード", "GitHub / Streamlit連携"],
+        ["顧客向けサイト", "運営画面", "連携・CSV"],
     )
 
     if page == "顧客向けサイト":
         render_public_site(ideas)
-    elif page == "運営ダッシュボード":
+    elif page == "運営画面":
         render_admin(ideas, events, comments, ratings)
     else:
         render_github_streamlit_notes()
