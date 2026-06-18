@@ -919,7 +919,7 @@ def event_count(summary: pd.DataFrame, idea_id: str, event_type: str) -> int:
 def render_like_button(idea_id: str, like_count: int, key_prefix: str) -> None:
     liked = has_liked(idea_id)
     label = f"♥ いいね済み {like_count} / 取り下げ" if liked else f"♡ いいね {like_count}"
-    if st.button(label, key=f"{key_prefix}_like_{idea_id}", use_container_width=True):
+    if st.button(label, key=f"{key_prefix}_like_{idea_id}", width="stretch"):
         if liked:
             remove_like(idea_id)
             st.toast("いいねを取り下げました")
@@ -938,7 +938,7 @@ def render_interest_rating(idea_id: str, key_prefix: str) -> None:
         if current_rating == rating:
             label = f"{rating} 選択中"
         with rating_cols[rating - 1]:
-            if st.button(label, key=f"{key_prefix}_interest_{idea_id}_{rating}", use_container_width=True):
+            if st.button(label, key=f"{key_prefix}_interest_{idea_id}_{rating}", width="stretch"):
                 set_rating(idea_id, rating)
                 st.toast(f"使いたい度 {rating} を記録しました")
                 st.rerun()
@@ -1019,7 +1019,7 @@ def render_detail_page(ideas: pd.DataFrame, summary: pd.DataFrame, idea_id: str)
 
     external_url = str(row.get("external_url", "") or "").strip()
     if external_url:
-        st.link_button("デモ・関連ページを開く", external_url, use_container_width=False)
+        st.link_button("デモ・関連ページを開く", external_url, width="content")
 
     render_comment_form(row["id"], "detail")
 
@@ -1074,7 +1074,7 @@ def render_public_site(ideas: pd.DataFrame) -> None:
                 left, right = st.columns([1, 1])
                 with left:
                     render_like_button(row["id"], like_count, "card")
-                if right.button("詳しく見る", key=f"click_{row['id']}", use_container_width=True):
+                if right.button("詳しく見る", key=f"click_{row['id']}", width="stretch"):
                     track_event(row["id"], "click")
                     st.query_params["idea"] = row["id"]
                     st.rerun()
@@ -1159,7 +1159,7 @@ def render_admin(ideas: pd.DataFrame, events: pd.DataFrame, comments: pd.DataFra
                 "mvp_score": "MVPスコア",
             }
         ),
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )
 
