@@ -34,11 +34,13 @@ DEFAULT_IMAGE_BY_TITLE = {
     "資材注文アプリ": "generated_assets/material-order-app-pr.png",
     "クレアポ（クレーン手配管理）": "generated_assets/cleapo-crane-order-pr.png",
     "カンベル（現場監督ルーティン管理）": "generated_assets/kanbel-routine-task-pr.png",
+    "ゲートベル（車両到着アラート）": "generated_assets/gatebell-lp-summary-pr.png",
     "新規入場者教育AIチェック": "generated_assets/safety-orientation-ai.png",
     "現場横断Power BIダッシュボード": "generated_assets/cross-site-dashboard.png",
 }
 
 FEATURED_IDEA_TITLES = [
+    "ゲートベル（車両到着アラート）",
     "モノクル（資材発注管理）",
     "カンベル（現場監督ルーティン管理）",
     "クレアポ（クレーン手配管理）",
@@ -49,6 +51,7 @@ CATEGORIES = {
     "現場AI": "現場で聞く・探す・確認する負担を減らす",
     "書類/議事録": "会議後や提出前の作成作業を軽くする",
     "発注/手配": "電話・メール・記憶に頼る手配を整える",
+    "搬入/車両": "ダンプ、トラック、搬入車両の到着と受付を整える",
     "安全/品質": "教育、巡回、確認、是正を抜け漏れなくする",
     "ダッシュボード": "工程・原価・安全・出来高を見える化する",
 }
@@ -116,6 +119,36 @@ KANBEL_ROUTINE_TASK_IDEA = {
         "- 上職者が見たい単位は個人別、現場別、日別のどれか\n"
         "- 未完了時に通知、コメント、追加指示をどこまで必要とするか\n"
         "- 既存の朝礼、昼礼、終業確認の流れに無理なく組み込めるか"
+    ),
+    "status": "検証前",
+}
+
+GATEBELL_ARRIVAL_ALERT_IDEA = {
+    "title": "ゲートベル（車両到着アラート）",
+    "category": "搬入/車両",
+    "summary": "ダンプやトラックが現場に近づいたら、任意の通知時間で知らせ、入場OK・待機・NGもスマホで返せるアプリ。",
+    "user_scene": "ゲート前で待ち続けているガードマンや現場担当者が、スマホやPCで接近車両、到着予測、入場可否を確認する。",
+    "value": "到着待ちの無駄時間、確認電話、不要なガードマン手配、ゲート前の混雑を減らし、現場担当者が本来の作業に集中しやすくする。",
+    "detail": (
+        "ゲートベルは、ダンプ、トラック、生コン車、資材搬入車などの接近を現場側に知らせる車両到着アラートアプリである。\n"
+        "現場では、運転手がいつ到着するかわからず、ゲート前で担当者やガードマンが待ち続けたり、"
+        "電話で何度も確認したりする時間が発生している。\n\n"
+        "このアプリでは、運転手の同意を前提にGPS位置情報を取得し、現場から一定距離または設定した任意の通知時間になった時点で、"
+        "現場担当者へアラートを出す。現場側は接近中の車両、運転手名、車種、搬入口、到着予測を一覧で確認できる。\n"
+        "さらに、現場側から運転手へ「入場OK」「待機」「入場NG」をスマホで返せるため、ゲート前に来てから判断する時間を減らせる。\n\n"
+        "主な機能:\n"
+        "- 運転手のスマホGPSによる接近検知\n"
+        "- 1分前、7分前、12分前など現場ごとの任意通知タイミング設定\n"
+        "- 車両名、運転手、搬入口、到着予測の一覧表示\n"
+        "- 入場OK、待機、入場NGのスマホ返信\n"
+        "- ゲート担当者、現場監督、警備員への音・画面通知\n"
+        "- 搬入予定と実到着時刻の履歴管理\n\n"
+        "MVPで確認したいこと:\n"
+        "- GPS共有に対する運転手、協力会社、元請け側の同意フロー\n"
+        "- 現場ごとに何分前通知が使いやすいか\n"
+        "- 通知を受けるべき担当者と、入場可否を返す担当者は誰か\n"
+        "- 入場OK、待機、入場NGの3択で現場運用が回るか\n"
+        "- 警備員の配置時間、待機時間、ゲート前混雑をどの程度減らせるか"
     ),
     "status": "検証前",
 }
@@ -191,6 +224,7 @@ DEFAULT_IDEAS = [
     DAILY_REPORT_IDEA,
     CLEAPO_CRANE_ORDER_IDEA,
     KANBEL_ROUTINE_TASK_IDEA,
+    GATEBELL_ARRIVAL_ALERT_IDEA,
     MONOCLE_MATERIAL_ORDER_IDEA,
     *SEED_IDEAS,
 ]
@@ -241,6 +275,25 @@ def rows_to_df(rows: list[dict[str, Any]], columns: list[str]) -> pd.DataFrame:
 def is_url(value: str) -> bool:
     parsed = urlparse(value)
     return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
+
+
+def resolve_image_source(value: str) -> str:
+    image_path = str(value or "").strip()
+    if not image_path or is_url(image_path):
+        return image_path
+
+    path = Path(image_path)
+    if path.is_absolute() and path.exists():
+        return str(path)
+
+    app_relative_path = APP_DIR / image_path
+    if app_relative_path.exists():
+        return str(app_relative_path)
+
+    if path.exists():
+        return str(path)
+
+    return ""
 
 
 def connect() -> sqlite3.Connection:
@@ -911,8 +964,9 @@ def render_image_or_placeholder(row: pd.Series) -> None:
     image_path = str(row.get("image_path", "") or "")
     if not image_path:
         image_path = DEFAULT_IMAGE_BY_TITLE.get(str(row.get("title", "")), "")
-    if image_path and (is_url(image_path) or Path(image_path).exists()):
-        st.image(image_path, use_container_width=True)
+    resolved_image_source = resolve_image_source(image_path)
+    if resolved_image_source:
+        st.image(resolved_image_source, use_container_width=True)
         return
     st.markdown(
         f"""
@@ -1159,10 +1213,11 @@ def render_admin(ideas: pd.DataFrame, events: pd.DataFrame, comments: pd.DataFra
     )
     edit_row = ideas[ideas["id"] == edit_id].iloc[0]
     current_image_path = str(edit_row.get("image_path", "") or "")
+    current_image_source = resolve_image_source(current_image_path)
 
-    if current_image_path and (is_url(current_image_path) or Path(current_image_path).exists()):
+    if current_image_source:
         st.write("**現在の画像**")
-        st.image(current_image_path, width=360)
+        st.image(current_image_source, width=360)
 
     with st.form("edit_idea"):
         edited_title = st.text_input("アイデア名", value=str(edit_row["title"]))
@@ -1341,48 +1396,67 @@ def main() -> None:
     st.markdown(
         """
         <style>
-        .stApp { background: #f7f8fb; }
-        [data-testid="stHeader"] { background: rgba(247, 248, 251, 0.88); }
-        h1, h2, h3 { letter-spacing: 0 !important; }
+        .stApp { background: #f5f5f7; }
+        [data-testid="stHeader"] {
+            background: rgba(245, 245, 247, 0.82);
+            backdrop-filter: blur(18px);
+        }
+        [data-testid="stSidebar"] {
+            background: #05070a;
+        }
+        h1, h2, h3 {
+            color: #0b0f14 !important;
+            font-weight: 850 !important;
+            letter-spacing: 0 !important;
+        }
         .stApp label,
         .stApp [data-testid="stMarkdownContainer"],
         .stApp p,
         .stApp span {
-            color: #18212f;
+            color: #0b0f14;
         }
         .stApp [data-testid="stSidebar"] label,
         .stApp [data-testid="stSidebar"] span,
         .stApp [data-testid="stSidebar"] p {
-            color: #f8fafc;
+            color: #f5f5f7;
         }
         .stTextInput input,
         .stTextArea textarea,
         .stSelectbox div[data-baseweb="select"] > div {
             background: #ffffff;
-            border-color: #cbd5e1;
-            color: #111827;
+            border-color: #d8dce3;
+            color: #0b0f14;
         }
         .stTextInput input::placeholder,
         .stTextArea textarea::placeholder {
-            color: #64748b;
+            color: #7b8491;
             opacity: 1;
+        }
+        div[data-testid="stVerticalBlockBorderWrapper"] {
+            border-color: rgba(15, 23, 42, 0.10) !important;
+            border-radius: 8px !important;
+            box-shadow: 0 18px 48px rgba(15, 23, 42, 0.07);
+        }
+        div[data-testid="stImage"] img {
+            border-radius: 8px;
         }
         div[data-testid="stButton"] button,
         div[data-testid="stFormSubmitButton"] button,
         div[data-testid="stDownloadButton"] button,
         div[data-testid="stLinkButton"] a {
-            background: #ffffff !important;
-            border: 1px solid #94a3b8 !important;
-            color: #0f172a !important;
-            font-weight: 700 !important;
+            background: #05070a !important;
+            border: 1px solid #05070a !important;
+            border-radius: 8px !important;
+            color: #ffffff !important;
+            font-weight: 800 !important;
         }
         div[data-testid="stButton"] button:hover,
         div[data-testid="stFormSubmitButton"] button:hover,
         div[data-testid="stDownloadButton"] button:hover,
         div[data-testid="stLinkButton"] a:hover {
-            background: #eef6ff !important;
-            border-color: #2563eb !important;
-            color: #0b3b85 !important;
+            background: #1d1d1f !important;
+            border-color: #1d1d1f !important;
+            color: #ffffff !important;
         }
         div[data-testid="stButton"] button p,
         div[data-testid="stFormSubmitButton"] button p,
@@ -1398,15 +1472,16 @@ def main() -> None:
         .stApp [role="radiogroup"] button,
         .stApp [data-baseweb="button-group"] button {
             background: #ffffff !important;
-            border-color: #cbd5e1 !important;
-            color: #0f172a !important;
+            border-color: #d8dce3 !important;
+            border-radius: 8px !important;
+            color: #0b0f14 !important;
         }
         div[data-testid="stSegmentedControl"] button *,
         div[data-testid="stSegmentedControl"] label *,
         div[data-testid="stSegmentedControl"] div[role="radio"] *,
         .stApp [role="radiogroup"] button *,
         .stApp [data-baseweb="button-group"] button * {
-            color: #0f172a !important;
+            color: #0b0f14 !important;
         }
         div[data-testid="stSegmentedControl"] button[aria-checked="true"],
         div[data-testid="stSegmentedControl"] button[aria-pressed="true"],
@@ -1416,10 +1491,10 @@ def main() -> None:
         .stApp [role="radiogroup"] button[aria-pressed="true"],
         .stApp [data-baseweb="button-group"] button[aria-checked="true"],
         .stApp [data-baseweb="button-group"] button[aria-pressed="true"] {
-            background: #eef6ff !important;
-            border-color: #2563eb !important;
-            color: #0b3b85 !important;
-            font-weight: 700 !important;
+            background: #05070a !important;
+            border-color: #05070a !important;
+            color: #ffffff !important;
+            font-weight: 800 !important;
         }
         .stApp [role="radiogroup"],
         .stApp [data-baseweb="button-group"] {
@@ -1428,58 +1503,59 @@ def main() -> None:
         div[data-testid="stCaptionContainer"],
         div[data-testid="stCaptionContainer"] *,
         .stApp small {
-            color: #475569 !important;
+            color: #6b7280 !important;
         }
         div[data-testid="stMetric"] {
             background: #ffffff;
-            border: 1px solid #e5e7eb;
+            border: 1px solid rgba(15, 23, 42, 0.10);
             border-radius: 8px;
             padding: 14px 16px;
+            box-shadow: 0 14px 36px rgba(15, 23, 42, 0.06);
         }
         div[data-testid="stMetric"] *,
         div[data-testid="stMetricValue"],
         div[data-testid="stMetricLabel"],
         div[data-testid="stMetricDelta"] {
-            color: #0f172a !important;
+            color: #0b0f14 !important;
         }
         div[data-testid="stMetricValue"] {
-            font-weight: 800 !important;
+            font-weight: 850 !important;
         }
         div[data-testid="stFileUploader"] section,
         div[data-testid="stFileUploaderDropzone"] {
             background: #ffffff !important;
-            border: 1px dashed #94a3b8 !important;
-            color: #0f172a !important;
+            border: 1px dashed #aeb6c2 !important;
+            color: #0b0f14 !important;
         }
         div[data-testid="stFileUploader"] section *,
         div[data-testid="stFileUploaderDropzone"] * {
-            color: #334155 !important;
+            color: #424b57 !important;
         }
         div[data-testid="stFileUploader"] button {
-            background: #f8fafc !important;
-            border: 1px solid #94a3b8 !important;
-            color: #0f172a !important;
-            font-weight: 700 !important;
+            background: #ffffff !important;
+            border: 1px solid #aeb6c2 !important;
+            color: #0b0f14 !important;
+            font-weight: 800 !important;
         }
         div[data-testid="stButton"] button:disabled,
         div[data-testid="stButton"] button:disabled *,
         div[data-testid="stFormSubmitButton"] button:disabled,
         div[data-testid="stFormSubmitButton"] button:disabled * {
             background: #e5e7eb !important;
-            border-color: #cbd5e1 !important;
-            color: #64748b !important;
+            border-color: #d1d5db !important;
+            color: #6b7280 !important;
             opacity: 1 !important;
         }
         .idea-placeholder {
             align-items: center;
             aspect-ratio: 16 / 9;
-            background: linear-gradient(135deg, #eef2f7 0%, #dbe7e4 100%);
-            border: 1px solid #d8dee8;
+            background: linear-gradient(135deg, #f5f5f7 0%, #dfe3e8 100%);
+            border: 1px solid #d8dce3;
             border-radius: 8px;
-            color: #334155;
+            color: #424b57;
             display: flex;
             font-size: 15px;
-            font-weight: 700;
+            font-weight: 800;
             justify-content: center;
             margin-bottom: 12px;
             width: 100%;
