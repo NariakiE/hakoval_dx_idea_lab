@@ -46,6 +46,20 @@ FEATURED_IDEA_TITLES = [
     "クレアポ（クレーン手配管理）",
 ]
 
+MUST_HAVE_HOOK_BY_TITLE = {
+    "業者側の紙の日報をデジタル化（常用工事記入可能）": "人工と常用の根拠を、請求前に探さない。",
+    "クレアポ（クレーン手配管理）": "明日クレーンが来ない、車種が違う。その一つで現場は止まる。",
+    "現場マニュアルAI検索": "迷った判断を、担当者の勘で終わらせない。",
+    "定例会議メモから議事録・メール自動作成": "決定事項と宿題を、会議室に置き忘れない。",
+    "音声発注・手配アシスタント": "思い出した手配を、その場で依頼まで終わらせる。",
+    "新規入場者教育AIチェック": "この人を現場に入れてよい、その証跡を残す。",
+    "現場横断Power BIダッシュボード": "遅れと是正漏れを、報告会で初めて知る状態にしない。",
+    "カンベル（現場監督ルーティン管理）": "監督の抜け漏れを、個人の記憶任せにしない。",
+    "モノクル（資材発注管理）": "頼んだ・品番・金額の認識違いをなくす。",
+    "資材注文アプリ": "頼んだ・品番・金額の認識違いをなくす。",
+    "ゲートベル（車両到着アラート）": "車両が来てから慌てるゲート運用を終わらせる。",
+}
+
 CATEGORIES = {
     "現場管理": "日々のタスク、指示、進捗を見える化する",
     "現場AI": "現場で聞く・探す・確認する負担を減らす",
@@ -907,6 +921,25 @@ def idea_detail_text(row: pd.Series) -> str:
     )
 
 
+def must_have_hook(row: pd.Series) -> str:
+    return MUST_HAVE_HOOK_BY_TITLE.get(str(row.get("title", "")), "")
+
+
+def render_must_have_hook(row: pd.Series) -> None:
+    hook = must_have_hook(row)
+    if not hook:
+        return
+    st.markdown(
+        f"""
+        <div class="must-have-hook">
+            <span>なくてはならない理由</span>
+            <strong>{html.escape(hook)}</strong>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def event_count(summary: pd.DataFrame, idea_id: str, event_type: str) -> int:
     if summary.empty or event_type not in summary.columns:
         return 0
@@ -1000,6 +1033,7 @@ def render_detail_page(ideas: pd.DataFrame, summary: pd.DataFrame, idea_id: str)
     with top_left:
         st.caption(row["category"])
         st.markdown(f"## {row['title']}")
+        render_must_have_hook(row)
         st.write(row["summary"])
         stat_cols = st.columns(3)
         stat_cols[0].metric("♥ いいね", f"{like_count:,}")
@@ -1066,6 +1100,7 @@ def render_public_site(ideas: pd.DataFrame) -> None:
                 render_image_or_placeholder(row)
                 st.caption(row["category"])
                 st.subheader(row["title"])
+                render_must_have_hook(row)
                 st.write(row["summary"])
                 st.markdown(f"**使う場面**  \n{row['user_scene']}")
                 st.markdown(f"**期待できる効果**  \n{row['value']}")
@@ -1562,6 +1597,31 @@ def main() -> None:
             border: 1px solid #aeb6c2 !important;
             color: #0b0f14 !important;
             font-weight: 800 !important;
+        }
+        .must-have-hook {
+            background: #ffffff;
+            border: 1px solid rgba(15, 23, 42, 0.12);
+            border-left: 5px solid #05070a;
+            border-radius: 8px;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+            margin: 10px 0 14px;
+            padding: 14px 16px 15px;
+        }
+        .must-have-hook span {
+            color: #6b7280 !important;
+            display: block;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0 !important;
+            margin-bottom: 4px;
+        }
+        .must-have-hook strong {
+            color: #0b0f14;
+            display: block;
+            font-size: 19px;
+            font-weight: 900;
+            line-height: 1.45;
+            letter-spacing: 0 !important;
         }
         div[data-testid="stButton"] button:disabled,
         div[data-testid="stButton"] button:disabled *,
