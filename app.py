@@ -60,6 +60,25 @@ MUST_HAVE_HOOK_BY_TITLE = {
     "ゲートベル（車両到着アラート）": "車両が来てから慌てるゲート運用を終わらせる。",
 }
 
+PUBLIC_COPY_OVERRIDES_BY_TITLE = {
+    "業者側の紙の日報をデジタル化（常用工事記入可能）": {
+        "summary": "ゼネコン側の日報がペーパーレスになっても、協力会社が請求できる人工・常用・追加作業の根拠を現場で残せる日報アプリ。",
+        "user_scene": "職長が帰り際や作業終了前にスマホで人工・常用工事を入力し、元請承認を受ける。事務員さんは月末に紙を集めてコピー・転記・手入力する代わりに、同じデータで請求根拠を確認する。",
+        "value": "職長の記入負担、協力会社の請求根拠不足、事務員さんの月末集計・転記作業をまとめて減らす。日報用紙の紛失や確認電話も減らせる。",
+        "detail": (
+            "元請の日報がペーパーレス化したことで、協力会社側では常用工事、人工、追加作業などの請求根拠を別の紙日報で残す必要が出ている。\n"
+            "職長は作業員が帰った後や帰り際に紙へ記入し、月末には事務員さんが紙を集めてコピー、転記、手入力、貼り付けを行うため、請求前の確認に大きな手間がかかる。\n\n"
+            "このアプリでは、職長がスマホから人工、作業内容、常用工事をその日のうちに入力し、元請へ承認依頼できる。\n"
+            "承認された内容は月次集計へつながり、協力会社と事務員さんが請求できるべき内容の根拠として確認できる。\n\n"
+            "MVPで確認したいこと:\n"
+            "- 職長が帰り際に無理なく入力できる項目数\n"
+            "- 常用工事、人工、追加作業の請求根拠として必要な粒度\n"
+            "- 元請承認の流れをメール、画面承認、PDF出力のどれで始めるべきか\n"
+            "- 事務員さんの月末集計、転記、確認電話がどれだけ減るか"
+        ),
+    },
+}
+
 CATEGORIES = {
     "現場管理": "日々のタスク、指示、進捗を見える化する",
     "現場AI": "現場で聞く・探す・確認する負担を減らす",
@@ -911,14 +930,34 @@ def derive_keywords(texts: list[str]) -> list[tuple[str, int]]:
 
 
 def idea_detail_text(row: pd.Series) -> str:
+    override = PUBLIC_COPY_OVERRIDES_BY_TITLE.get(str(row.get("title", "")), {})
+    if override.get("detail"):
+        return str(override["detail"])
     detail = str(row.get("detail", "") or "").strip()
     if detail:
         return detail
     return (
-        f"{row['summary']}\n\n"
-        f"想定利用シーン:\n{row['user_scene']}\n\n"
-        f"期待できる効果:\n{row['value']}"
+        f"{idea_summary_text(row)}\n\n"
+        f"想定利用シーン:\n{idea_user_scene_text(row)}\n\n"
+        f"期待できる効果:\n{idea_value_text(row)}"
     )
+
+
+def public_copy_value(row: pd.Series, key: str) -> str:
+    override = PUBLIC_COPY_OVERRIDES_BY_TITLE.get(str(row.get("title", "")), {})
+    return str(override.get(key) or row.get(key, "") or "")
+
+
+def idea_summary_text(row: pd.Series) -> str:
+    return public_copy_value(row, "summary")
+
+
+def idea_user_scene_text(row: pd.Series) -> str:
+    return public_copy_value(row, "user_scene")
+
+
+def idea_value_text(row: pd.Series) -> str:
+    return public_copy_value(row, "value")
 
 
 def must_have_hook(row: pd.Series) -> str:
@@ -1034,7 +1073,7 @@ def render_detail_page(ideas: pd.DataFrame, summary: pd.DataFrame, idea_id: str)
         st.caption(row["category"])
         st.markdown(f"## {row['title']}")
         render_must_have_hook(row)
-        st.write(row["summary"])
+        st.write(idea_summary_text(row))
         stat_cols = st.columns(3)
         stat_cols[0].metric("♥ いいね", f"{like_count:,}")
         stat_cols[1].metric("詳しく見る", f"{click_count:,}")
@@ -1047,9 +1086,9 @@ def render_detail_page(ideas: pd.DataFrame, summary: pd.DataFrame, idea_id: str)
     st.markdown("### 詳細")
     st.markdown(idea_detail_text(row).replace("\n", "  \n"))
     st.markdown("### 使う場面")
-    st.write(row["user_scene"])
+    st.write(idea_user_scene_text(row))
     st.markdown("### 期待できる効果")
-    st.write(row["value"])
+    st.write(idea_value_text(row))
 
     external_url = str(row.get("external_url", "") or "").strip()
     if external_url:
@@ -1101,9 +1140,9 @@ def render_public_site(ideas: pd.DataFrame) -> None:
                 st.caption(row["category"])
                 st.subheader(row["title"])
                 render_must_have_hook(row)
-                st.write(row["summary"])
-                st.markdown(f"**使う場面**  \n{row['user_scene']}")
-                st.markdown(f"**期待できる効果**  \n{row['value']}")
+                st.write(idea_summary_text(row))
+                st.markdown(f"**使う場面**  \n{idea_user_scene_text(row)}")
+                st.markdown(f"**期待できる効果**  \n{idea_value_text(row)}")
 
                 like_count = event_count(summary, row["id"], "like")
                 left, right = st.columns([1, 1])
