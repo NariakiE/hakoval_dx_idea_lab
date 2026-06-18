@@ -1679,6 +1679,13 @@ def main() -> None:
             color: #6b7280 !important;
             opacity: 1 !important;
         }
+        div[data-testid="stImage"] img {
+            aspect-ratio: 16 / 9;
+            background: #f8fbff;
+            border-radius: 8px;
+            object-fit: contain;
+            width: 100%;
+        }
         .idea-placeholder {
             align-items: center;
             aspect-ratio: 16 / 9;
